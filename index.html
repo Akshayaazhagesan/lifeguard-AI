@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LifeGuard AI</title>
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+
+  <style>
+    :root {
+      --primary: #3498db;
+      --primary-hover: #2980b9;
+      --danger: #e74c3c;
+      --success: #2ecc71;
+      --text: #333;
+      --light-text: #7f8c8d;
+      --border: #ddd;
+      --bg: #f5f5f5;
+    }
+    
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: var(--bg);
+    }
+    
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      max-height: 80vh;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) #f1f1f1;
+    }
+    
+    .container::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .container::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    
+    .container::-webkit-scrollbar-thumb {
+      background-color: var(--primary);
+      border-radius: 10px;
+    }
+    
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 5px;
+      font-size: 2.2rem;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: var(--light-text);
+      margin-bottom: 30px;
+      font-style: italic;
+      font-size: 1.1rem;
+    }
+    
+    .form-group {
+      margin-bottom: 18px;
+      animation: fadeIn 0.3s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    
+    input[type="number"], input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 16px;
+      transition: border 0.3s, box-shadow 0.3s;
+    }
+    
+    input[type="number"]:focus, input[type="file"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+      outline: none;
+    }
+    
+    .blood-pressure-group {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .blood-pressure-group input {
+      flex: 1;
+    }
+    
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 18px;
+      width: 100%;
+      margin-top: 25px;
+      transition: all 0.3s;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+    
+    button:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    button:disabled {
+      background-color: #95a5a6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    
+    .result {
+      margin-top: 30px;
+      padding: 25px;
+      border-radius: 8px;
+      display: none;
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    .result h2 {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+    
+    .high-risk {
+      background-color: #ffebee;
+      border-left: 6px solid var(--danger);
+    }
+    
+    .low-risk {
+      background-color: #e8f5e9;
+      border-left: 6px solid var(--success);
+    }
+    
+    #imagePreview {
+      margin-top: 15px;
+      max-width: 100%;
+      max-height: 300px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: none;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    #risk-level {
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+    
+    .high-risk #risk-level {
+      color: var(--danger);
+    }
+    
+    .low-risk #risk-level {
+      color: var(--success);
+    }
+    
+    #confidence {
+      font-weight: bold;
+    }
+    
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+      
+      h1 {
+        font-size: 1.8rem;
+      }
+      
+      input[type="number"], input[type="file"] {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>LifeGuard AI</h1>
+    <p class="subtitle">Predict organ failure risk for ICU patients</p>
+
+    <div class="form-group">
+      <label for="heart_rate">Heart Rate (bpm):</label>
+      <input type="number" id="heart_rate" step="0.1" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="respiratory_rate">Respiratory Rate (breaths/min):</label>
+      <input type="number" id="respiratory_rate" step="0.1" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="spo2">SpO2 (%):</label>
+      <input type="number" id="spo2" min="0" max="100" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="creatinine">Creatinine (mg/dL):</label>
+      <input type="number" id="creatinine" step="0.01" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="bun">BUN (mg/dL):</label>
+      <input type="number" id="bun" step="0.1" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="alt">ALT (U/L):</label>
+      <input type="number" id="alt" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="ast">AST (U/L):</label>
+      <input type="number" id="ast" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="sodium">Sodium (mEq/L):</label>
+      <input type="number" id="sodium" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="potassium">Potassium (mEq/L):</label>
+      <input type="number" id="potassium" step="0.1" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="calcium">Calcium (mg/dL):</label>
+      <input type="number" id="calcium" step="0.1" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="lactate">Lactate (mmol/L):</label>
+      <input type="number" id="lactate" step="0.1" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="coagulation_profile">Coagulation Profile (INR):</label>
+      <input type="number" id="coagulation_profile" step="0.01" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="blood_pressure">Blood Pressure (mmHg):</label>
+      <div class="blood-pressure-group">
+        <input type="number" id="blood_pressure" placeholder="Systolic" required>
+        <input type="number" id="blood_pressure_diastolic" placeholder="Diastolic" required>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label for="temperature">Temperature (°C):</label>
+      <input type="number" id="temperature" step="0.1" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="urine_output">Urine Output (mL/kg/hr):</label>
+      <input type="number" id="urine_output" step="0.1" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="glasgow_coma_scale">Glasgow Coma Scale (3-15):</label>
+      <input type="number" id="glasgow_coma_scale" min="3" max="15" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="scan_image">Upload Scan/X-ray Image (optional):</label>
+      <input type="file" id="scan_image" accept=".jpg,.jpeg,.png" />
+      <img id="imagePreview" style="display:none; max-width:100%; margin-top:10px; border:1px solid #ddd; border-radius:5px;">
+    </div>
+
+    <button onclick="predictRisk()">Predict Risk</button>
+
+    <div id="result" class="result">
+      <h2>Prediction Result</h2>
+      <p>Organ Failure Risk: <span id="risk-level"></span></p>
+      <p>Confidence Level: <span id="confidence"></span>%</p>
+      <p id="upload-message"></p>
+    </div>
+  </div>
+
+  <script>
+    async function predictRisk() {
+      const fields = [
+        "heart_rate", "respiratory_rate", "spo2", "creatinine", "bun",
+        "alt", "ast", "sodium", "potassium", "calcium", "lactate",
+        "coagulation_profile", "blood_pressure", "blood_pressure_diastolic",
+        "temperature", "urine_output", "glasgow_coma_scale"
+      ];
+
+      const formData = new FormData();
+
+      // Validate and append inputs
+      for (const field of fields) {
+        const el = document.getElementById(field);
+        const val = el.value.trim();
+        if (!val) {
+          alert(`Please fill in the ${field.replace(/_/g, ' ')} field!`);
+          el.focus();
+          return;
+        }
+        const numVal = parseFloat(val);
+        if (isNaN(numVal)) {
+          alert(`Please enter a valid number for ${field.replace(/_/g, ' ')}`);
+          el.focus();
+          return;
+        }
+        formData.append(field, numVal);
+      }
+
+      // Append image file if selected
+      const scanFile = document.getElementById("scan_image").files[0];
+      if (scanFile) {
+        formData.append("scan_image", scanFile);
+      }
+
+      const button = document.querySelector('button');
+      button.disabled = true;
+      button.textContent = "Predicting...";
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/predict", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || "Prediction failed");
+        }
+
+        const data = await response.json();
+
+        // Display results
+        document.getElementById("risk-level").textContent = data.risk_level + " Risk";
+        document.getElementById("confidence").textContent = data.confidence;
+        document.getElementById("upload-message").textContent = data.message || "";
+
+        const resultDiv = document.getElementById("result");
+        resultDiv.className = "result";
+        resultDiv.classList.add(data.risk_level === "High" ? "high-risk" : "low-risk");
+        resultDiv.style.display = "block";
+
+        resultDiv.scrollIntoView({ behavior: 'smooth' });
+
+      } catch (error) {
+        alert("Prediction error: " + error.message);
+        console.error("Prediction error:", error);
+      } finally {
+        button.disabled = false;
+        button.textContent = "Predict Risk";
+      }
+    }
+
+    // Show image preview when selected
+    document.getElementById('scan_image').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      const preview = document.getElementById('imagePreview');
+      
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+      } else {
+        preview.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
